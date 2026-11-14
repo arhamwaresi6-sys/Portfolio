@@ -961,3 +961,132 @@ a {
     transform: none;
   }
 }
+
+/* ── Mobile & Tablet Smooth Performance & Pro UI ── */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-top: calc(5rem + env(safe-area-inset-top, 0px));
+}
+
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: auto;
+}
+
+.navbar {
+  will-change: transform;
+}
+
+.image-sequence__element {
+  will-change: width, height, transform;
+  transform: translateZ(0);
+}
+
+.star-icon {
+  will-change: transform;
+  transform-origin: center center;
+}
+
+.marquee-advanced {
+  touch-action: pan-y;
+}
+
+[data-glass-carousel-canvas] {
+  touch-action: pan-y pinch-zoom;
+}
+
+.navbar-link-wrapper {
+  background: rgba(10, 10, 14, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* Touch Device Tactile States (no sticky hover) */
+@media (hover: none) and (pointer: coarse) {
+  .cursor-wrap {
+    display: none !important;
+  }
+
+  .nav-button:active {
+    transform: scale(0.94);
+    transition: transform 0.12s ease;
+  }
+
+  .button-097:active {
+    transform: scale(0.97);
+    transition: transform 0.12s ease;
+  }
+
+  .skills-card:active {
+    transform: scale(0.985);
+    border-color: rgb(183 140 255 / 40%);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+}
+
+/* Tablet Optimizations (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  .section__header h1 {
+    font-size: clamp(4.2rem, 10vw, 6.5rem);
+    line-height: 0.88;
+  }
+
+  .skills-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .skills-card {
+    min-height: 18rem;
+    padding: 1.75rem;
+  }
+
+  .section__info ._2-col.is-intro {
+    gap: 2.5rem;
+  }
+}
+
+/* Mobile Optimizations (<= 767px) */
+@media (max-width: 767px) {
+  .section__header h1 {
+    font-size: clamp(3.2rem, 14vw, 5.5rem);
+    line-height: 0.88;
+    letter-spacing: -0.06em;
+  }
+
+  .heading-2 {
+    font-size: clamp(2rem, 8vw, 3.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+
+  .header-text-wrapper p {
+    font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+    line-height: 1.45;
+  }
+
+  .star-icon svg {
+    width: 32px;
+    height: 36px;
+  }
+
+  .glass-carousel__caption {
+    top: max(4.5rem, 9svh);
+    font-size: clamp(0.95rem, 3.6vw, 1.25rem);
+  }
+
+  .glass-carousel__counter {
+    bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem));
+  }
+
+  .glass-carousel__item-p {
+    font-size: clamp(1.25rem, 5.5vw, 2.5rem);
+  }
+
+  .button-097 {
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

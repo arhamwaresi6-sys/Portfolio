@@ -16,6 +16,11 @@ if (!gsap || !ScrollTrigger) {
 gsap.registerPlugin(ScrollTrigger);
 if (SplitText) gsap.registerPlugin(SplitText);
 
+ScrollTrigger.config({
+  ignoreMobileResize: true,
+  autoRefreshEvents: "visibilitychange,DOMContentLoaded,load"
+});
+
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
 const reduceMotion = () => motionQuery.matches;
 const cleanups = [];
@@ -112,15 +117,15 @@ function initPageLoader() {
 
   if (element) tl.to(element, {
     clipPath: 'inset(0% 0% 0% 0%)',
-    duration: 1.6,
-    ease: 'expo.inOut'
+    duration: 1.3,
+    ease: 'power4.inOut'
   }, 0);
 
   if (nav) tl.to(nav, {
     autoAlpha: 1,
-    duration: 1,
-    ease: 'expo.inOut'
-  }, 1);
+    duration: 0.8,
+    ease: 'power3.out'
+  }, 0.5);
 
   const events = eventScope();
 
@@ -253,23 +258,51 @@ function initMarqueeScrollDirection() {
 
     if (interactive) {
       marquee.classList.add('is-marquee-interactive');
+      let startX = 0, startY = 0, touchDecided = false;
 
       const onPointerDown = e => {
         if (!e.isPrimary || (e.button !== 0 && e.pointerType === 'mouse')) return;
-        dragging = true;
         dragPointerId = e.pointerId;
-        dragLastX = e.clientX;
+        startX = dragLastX = e.clientX;
+        startY = e.clientY;
         dragVel = 0;
         boost = 0;
-        marquee.dataset.marqueePointer = 'dragging';
-        try { marquee.setPointerCapture(e.pointerId); } catch {}
-        applyScale();
+        touchDecided = false;
+
+        if (e.pointerType === 'mouse') {
+          dragging = true;
+          marquee.dataset.marqueePointer = 'dragging';
+          try { marquee.setPointerCapture(e.pointerId); } catch {}
+          applyScale();
+        } else {
+          dragging = false;
+        }
       };
 
       const onPointerMove = e => {
-        if (!dragging || e.pointerId !== dragPointerId) {
-          if (!dragging && e.pointerType === 'mouse' && marquee.matches(':hover')) {
-            // Subtle hover glide from pointer travel.
+        if (e.pointerId !== dragPointerId) return;
+
+        if (!dragging && e.pointerType !== 'mouse' && !touchDecided) {
+          const distX = Math.abs(e.clientX - startX);
+          const distY = Math.abs(e.clientY - startY);
+          if (distY > 8 && distY > distX) {
+            touchDecided = true;
+            dragPointerId = null;
+            return;
+          }
+          if (distX > 8 && distX >= distY) {
+            touchDecided = true;
+            dragging = true;
+            marquee.dataset.marqueePointer = 'dragging';
+            try { marquee.setPointerCapture(e.pointerId); } catch {}
+            dragLastX = e.clientX;
+          } else {
+            return;
+          }
+        }
+
+        if (!dragging) {
+          if (e.pointerType === 'mouse' && marquee.matches(':hover')) {
             const glide = gsap.utils.clamp(-1.8, -0.2, baseDirection - e.movementX * 0.02);
             boost = glide - baseDirection;
             applyScale();
@@ -286,20 +319,24 @@ function initMarqueeScrollDirection() {
       };
 
       const onPointerUp = e => {
-        if (!dragging || (dragPointerId !== null && e.pointerId !== dragPointerId)) return;
+        if (dragPointerId !== null && e.pointerId !== dragPointerId) return;
+        const wasDragging = dragging;
         dragging = false;
         dragPointerId = null;
-        marquee.dataset.marqueePointer = 'hover';
+        touchDecided = false;
+        marquee.dataset.marqueePointer = e.pointerType === 'mouse' ? 'hover' : '';
         try { marquee.releasePointerCapture?.(e.pointerId); } catch {}
 
-        // Coast back to the steady left → right speed.
-        gsap.to({ v: boost }, {
-          v: 0,
-          duration: 0.85,
-          ease: 'power3.out',
-          onUpdate() { boost = this.targets()[0].v; applyScale(); },
-          onComplete() { boost = 0; applyScale(); }
-        });
+        if (wasDragging) {
+          // Coast back to the steady left → right speed.
+          gsap.to({ v: boost }, {
+            v: 0,
+            duration: 0.85,
+            ease: 'power3.out',
+            onUpdate() { boost = this.targets()[0].v; applyScale(); },
+            onComplete() { boost = 0; applyScale(); }
+          });
+        }
       };
 
       const onEnter = () => {
@@ -349,12 +386,14 @@ function initNavReveal() {
   const nav = document.querySelector('.navbar');
   if (!nav) return;
 
-  const events = eventScope(), originalTop = nav.style.top;
+  const events = eventScope();
   let height = nav.offsetHeight, frame = 0;
+  const setNavY = gsap.quickSetter(nav, 'y', 'px');
 
   const update = () => {
     frame = 0;
-    nav.style.top = `${Math.max(0, innerHeight - height - scrollY)}px`;
+    const targetY = Math.max(0, window.innerHeight - height - window.scrollY);
+    setNavY(targetY);
   };
   const schedule = () => {
     if (!frame) frame = requestAnimationFrame(update);
@@ -373,7 +412,7 @@ function initNavReveal() {
     events.destroy();
     observer.disconnect();
     cancelAnimationFrame(frame);
-    nav.style.top = originalTop;
+    gsap.set(nav, { clearProps: 'transform' });
   };
 }
 
@@ -686,23 +725,35 @@ function initSequenceElementResize() {
   if (reduceMotion()) return;
 
   const mm = gsap.matchMedia();
-  mm.add({ mobile: '(max-width: 767px)', desktop: '(min-width: 768px)' }, context => {
-    const mobile = context.conditions.mobile;
+  mm.add({
+    mobile: '(max-width: 767px)',
+    tablet: '(min-width: 768px) and (max-width: 991px)',
+    desktop: '(min-width: 992px)'
+  }, context => {
+    const { mobile, tablet } = context.conditions;
 
     document.querySelectorAll('[data-sequence-wrap]').forEach(wrap => {
       const element = wrap.querySelector('.image-sequence__element');
       if (!element) return;
 
+      const fromWidth = mobile ? '72vw' : tablet ? '52vw' : '35vw';
+      const toWidth = mobile ? '92vw' : tablet ? '72vw' : '25vw';
+      const fromHeight = mobile ? '52svh' : tablet ? '60svh' : '100vh';
+      const toHeight = mobile ? '68svh' : tablet ? '68svh' : '65vh';
+
       gsap.fromTo(element, {
-        width: mobile ? '60vw' : '35vw',
-        height: mobile ? '50svh' : '100vh'
+        width: fromWidth,
+        height: fromHeight
       }, {
-        width: mobile ? '90vw' : '25vw',
-        height: mobile ? '70svh' : '65vh',
-        ease: 'none',
+        width: toWidth,
+        height: toHeight,
+        ease: 'power1.out',
         scrollTrigger: {
-          trigger: wrap, start: 'top top', end: 'bottom top',
-          scrub: true, invalidateOnRefresh: true
+          trigger: wrap,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 0.8,
+          invalidateOnRefresh: true
         }
       });
     });
@@ -771,7 +822,7 @@ function initGradientWaveText() {
             trigger: heading,
             start: heading.dataset.gradientWaveScrollStart || 'top 90%',
             end: heading.dataset.gradientWaveScrollEnd || 'center 40%',
-            scrub: number(heading.dataset.gradientWaveScrub, .1, 0),
+            scrub: number(heading.dataset.gradientWaveScrub, 0.7, 0),
             onRefresh: () => paint(true)
           }
         });
@@ -812,7 +863,7 @@ function initStaggerChar() {
           scrollTrigger: {
             trigger: el,
             start: el.dataset.staggerCharStart || 'top 85%',
-            toggleActions: 'restart none none reset'
+            toggleActions: 'play none none reverse'
           }
         });
 
@@ -843,10 +894,10 @@ function initLineReveal() {
     }
 
     gsap.fromTo(line, { width: '0%' }, {
-      width: '100%', duration: 1.6, ease: 'expo.inOut',
+      width: '100%', duration: 1.4, ease: 'power3.out',
       scrollTrigger: {
         trigger: line, start: 'top 95%',
-        toggleActions: 'restart none none reset'
+        toggleActions: 'play none none reverse'
       }
     });
   });
@@ -942,17 +993,56 @@ function initContentRevealScroll() {
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: group,
-        start: group.dataset.start || 'top 80%',
-        toggleActions: 'restart none none reset'
+        start: group.dataset.start || 'top 85%',
+        toggleActions: 'play none none reverse'
       }
     });
 
     entries.forEach(entry => tl.fromTo(entry.el, {
       y: entry.distance, autoAlpha: 0
     }, {
-      y: 0, autoAlpha: 1, duration: .8, ease: 'power4.inOut'
+      y: 0, autoAlpha: 1, duration: 0.7, ease: 'power3.out'
     }, entry.position));
   });
+}
+
+function smoothScrollTo(target, duration = 1.0) {
+  if (!target) return;
+  const targetEl = typeof target === 'string' ? document.querySelector(target) : target;
+  let targetY = 0;
+  if (typeof target === 'number') {
+    targetY = target;
+  } else if (targetEl) {
+    const rect = targetEl.getBoundingClientRect();
+    const navOffset = 64;
+    targetY = Math.max(0, rect.top + window.scrollY - navOffset);
+  }
+
+  const scrollObj = { y: window.scrollY };
+  gsap.to(scrollObj, {
+    y: targetY,
+    duration,
+    ease: 'power3.inOut',
+    onUpdate() {
+      window.scrollTo(0, scrollObj.y);
+    }
+  });
+}
+
+function initAnchorSmoothScroll() {
+  const events = eventScope();
+  events.on(document, 'click', e => {
+    const link = e.target.closest('a[href^="#"]');
+    if (!link || link.closest('.navbar-link-wrapper')) return;
+    const href = link.getAttribute('href');
+    if (!href || href === '#' || href === '#!') return;
+    const target = document.querySelector(href);
+    if (!target) return;
+
+    e.preventDefault();
+    smoothScrollTo(target, 1.1);
+  });
+  return () => events.destroy();
 }
 
 /* Menu button click */
@@ -1009,14 +1099,14 @@ function initMenuIcon() {
 
   const menuTl = gsap.timeline({ paused: true, onReverseComplete: finishClose })
     .to(page, {
-      y: '5rem', duration: 1.05, ease: 'power3.inOut'
+      y: '3.5rem', duration: 0.45, ease: 'power3.out'
     }, 0)
     .to(wrapper, {
-      autoAlpha: 1, y: 0, pointerEvents: 'auto', duration: .85, ease: 'power4.out'
-    }, .18)
+      autoAlpha: 1, y: 0, pointerEvents: 'auto', duration: 0.38, ease: 'power3.out'
+    }, 0.05)
     .to(links, {
-      autoAlpha: 1, yPercent: 0, duration: .65, stagger: .06, ease: 'power4.out'
-    }, .75);
+      autoAlpha: 1, yPercent: 0, duration: 0.32, stagger: 0.035, ease: 'power3.out'
+    }, 0.12);
 
   const setOpen = (value, href = null) => {
     open = value;
@@ -1064,9 +1154,16 @@ function initMenuIcon() {
 
     const href = link.getAttribute('href');
     if (!href) return;
-    if (!href.startsWith('#')) e.preventDefault();
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      setOpen(false);
+      setTimeout(() => {
+        smoothScrollTo(href, 1.1);
+      }, 250);
+      return;
+    }
     if (wrapper.contains(document.activeElement)) trigger.focus({ preventScroll: true });
-    setOpen(false, href.startsWith('#') ? null : href);
+    setOpen(false, href);
   }));
 
   events.on(motionQuery, 'change', () => {
@@ -1814,18 +1911,16 @@ async function initLiquidGlassCarousel() {
       snapped = false;
     }
 
+    let startX = 0, startY = 0, touchDecided = false;
+
     function onPointerDown(e) {
       if (dragging || !e.isPrimary || (e.button !== 0 && e.pointerType === 'mouse')) return;
       suppressClick = false;
       syncVideos(true);
-      dragging = true;
       dragPointerId = e.pointerId;
       dragPointerType = e.pointerType || 'mouse';
-
-      try { el.setPointerCapture(e.pointerId); } catch {}
-
-      dragLastX = lastPointerX = e.clientX;
-      lastPointerY = e.clientY;
+      startX = dragLastX = lastPointerX = e.clientX;
+      startY = lastPointerY = e.clientY;
       dragDist = 0;
       dragVel = 0;
       dragMoveT = performance.now();
@@ -1834,10 +1929,48 @@ async function initLiquidGlassCarousel() {
       userInteracted = true;
       snapped = false;
       lastInput = dragMoveT;
+      touchDecided = false;
+
+      if (e.pointerType === 'mouse') {
+        dragging = true;
+        try { el.setPointerCapture(e.pointerId); } catch {}
+      } else {
+        dragging = false;
+      }
     }
 
     function onPointerMove(e) {
-      if (dragging && e.pointerId === dragPointerId) {
+      if (e.pointerId !== dragPointerId) {
+        lastPointerX = e.clientX;
+        lastPointerY = e.clientY;
+        lastPointerType = e.pointerType || 'mouse';
+        pointerInside = true;
+        if (e.pointerType === 'mouse') setHover(rectOf(e.clientX, e.clientY) !== null);
+        return;
+      }
+
+      if (!dragging && e.pointerType !== 'mouse' && !touchDecided) {
+        const distX = Math.abs(e.clientX - startX);
+        const distY = Math.abs(e.clientY - startY);
+        if (distY > 8 && distY > distX) {
+          // User is vertically scrolling the page over the carousel
+          touchDecided = true;
+          dragPointerId = null;
+          return;
+        }
+        if (distX > 8 && distX >= distY) {
+          // User is swiping horizontally to scroll the carousel
+          touchDecided = true;
+          dragging = true;
+          try { el.setPointerCapture(e.pointerId); } catch {}
+          dragLastX = e.clientX;
+          dragMoveT = performance.now();
+        } else {
+          return;
+        }
+      }
+
+      if (dragging) {
         const sens = dragPointerType === 'mouse' ? dragSpeed : touchSpeed;
         const dx = e.clientX - dragLastX;
         dragLastX = e.clientX;
@@ -1860,8 +1993,10 @@ async function initLiquidGlassCarousel() {
     }
 
     function onPointerUp(e) {
-      if (!dragging || (e && dragPointerId !== null && e.pointerId !== dragPointerId)) return;
+      if (e && dragPointerId !== null && e.pointerId !== dragPointerId) return;
+      const wasDragging = dragging;
       dragging = false;
+      touchDecided = false;
 
       if (dragPointerId !== null) {
         try { el.releasePointerCapture(dragPointerId); } catch {}
@@ -1869,7 +2004,7 @@ async function initLiquidGlassCarousel() {
       }
 
       const cancelled = e && (e.type === 'pointercancel' || e.type === 'lostpointercapture');
-      velocity = cancelled || performance.now() - dragMoveT > flickIdle ? 0 : dragVel;
+      velocity = cancelled || !wasDragging || performance.now() - dragMoveT > flickIdle ? 0 : dragVel;
       dragVel = 0;
       lastInput = performance.now();
       snapped = false;
@@ -2589,6 +2724,7 @@ function initMotionEffects() {
   }, () => {
     const cleanups = [
       initSmoothScroll,
+      initAnchorSmoothScroll,
       initStarRotation,
       initMarqueeScrollDirection,
       initFooterGradient,
@@ -2612,20 +2748,38 @@ function initMotionEffects() {
 function initSmoothScroll() {
   if (!window.LocomotiveScroll) return;
 
-  const nativeScroll = matchMedia('(pointer: coarse), (max-width: 991px)');
+  const isTouch = matchMedia('(pointer: coarse), (max-width: 991px)');
   const events = eventScope();
   let scroll = null;
 
   const syncScrollMode = () => {
-    if (reduceMotion() || nativeScroll.matches) {
+    if (reduceMotion()) {
+      scroll?.destroy?.();
+      scroll = null;
+      return;
+    }
+
+    if (isTouch.matches) {
       scroll?.destroy?.();
       scroll = null;
     } else if (!scroll) {
-      scroll = new LocomotiveScroll();
+      try {
+        scroll = new LocomotiveScroll({
+          lenisOptions: {
+            lerp: 0.09,
+            duration: 1.2,
+            smoothWheel: true,
+            wheelMultiplier: 1,
+            normalizeWheel: true
+          }
+        });
+      } catch {
+        scroll = new LocomotiveScroll();
+      }
     }
   };
 
-  events.on(nativeScroll, 'change', syncScrollMode);
+  events.on(isTouch, 'change', syncScrollMode);
   events.on(motionQuery, 'change', syncScrollMode);
   syncScrollMode();
 

@@ -14,6 +14,21 @@ const navItems = [
   { href: "#contact", label: "CONTACT" },
 ];
 
+const contactEmail = "arhamwaresi6@gmail.com";
+const contactSubject = "Portfolio inquiry";
+const contactBody = "Hi Arham,\n\nI came across your portfolio and would like to get in touch.\n\n";
+const contactEmailLink = `mailto:${contactEmail}?${new URLSearchParams({
+  subject: contactSubject,
+  body: contactBody,
+})}`;
+const gmailComposeLink = `https://mail.google.com/mail/?${new URLSearchParams({
+  view: "cm",
+  fs: "1",
+  to: contactEmail,
+  su: contactSubject,
+  body: contactBody,
+})}`;
+
 const stats = [
   {
     label: "Services",
@@ -356,13 +371,22 @@ export default function Home() {
                         <div className="flex-vertical">
                           <h6>Phone</h6>
                           <a data-link-stagger="" href="tel:+8801623619790" className="heading-style-h6">
-                            +8801623619790
+                            +880 1623-619790
                           </a>
                         </div>
                         <div className="flex-vertical">
                           <h6>Mail</h6>
-                          <a href="mailto:arhamwaresi6@gmail.com" data-link-stagger="" className="heading-style-h6">
-                            arhamwaresi6@gmail.com
+                          <a href={contactEmailLink} data-link-stagger="" className="heading-style-h6">
+                            {contactEmail}
+                          </a>
+                          <a
+                            href={gmailComposeLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Open a new Gmail draft addressed to Arham Waresi"
+                            className="mt-2 text-sm text-silver/70 underline underline-offset-4 transition hover:text-white"
+                          >
+                            Open Gmail
                           </a>
                         </div>
                       </div>

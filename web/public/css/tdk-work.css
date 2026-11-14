@@ -5200,9 +5200,14 @@ body {
   }
 }
 
-@media (max-width: 991px) and (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
+html {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .cursor-wrap {
+    display: none !important;
   }
 }
 

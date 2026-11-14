@@ -233,6 +233,8 @@
   line-height: 1.35;
   text-align: center;
   text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
   transition:
     border-color 160ms ease,
     background-color 160ms ease,

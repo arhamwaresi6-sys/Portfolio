@@ -33,8 +33,17 @@ const EMPTY_FORM = {
   sort_order: 0,
 };
 
+const ADMIN_SIGN_IN_COOLDOWN_KEY = "portfolio.adminSignInCooldownUntil";
+const ADMIN_SIGN_IN_COOLDOWN_MS = 5 * 60 * 1000;
+
 const fieldClassName =
   "admin-field mt-2 w-full rounded border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none transition placeholder:text-silver/40 focus:border-accent/70";
+
+function formatCooldown(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
 
 function slugify(value) {
   return value
@@ -194,10 +203,39 @@ export function AdminLogin({ errorMessage, infoMessage }) {
   const [message, setMessage] = useState(infoMessage ?? "");
   const [error, setError] = useState(errorMessage ?? "");
   const [isSending, setIsSending] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  useEffect(() => {
+    function restoreCooldown() {
+      try {
+        const expiresAt = Number(window.localStorage.getItem(ADMIN_SIGN_IN_COOLDOWN_KEY) || 0);
+        setCooldownSeconds(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)));
+      } catch (storageError) {
+        console.error("Could not restore the admin sign-in cooldown:", storageError);
+      }
+    }
+
+    restoreCooldown();
+    const timer = window.setInterval(() => {
+      setCooldownSeconds((remaining) => Math.max(0, remaining - 1));
+    }, 1000);
+    window.addEventListener("storage", restoreCooldown);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("storage", restoreCooldown);
+    };
+  }, []);
 
   async function sendSignInLink() {
+    if (isSending || cooldownSeconds > 0) {
+      return;
+    }
+
     setError("");
     setMessage("");
+    setLinkSent(false);
     setIsSending(true);
 
     try {
@@ -214,7 +252,15 @@ export function AdminLogin({ errorMessage, infoMessage }) {
         return;
       }
 
-      setMessage("A secure sign-in link has been sent to the owner inbox.");
+      setLinkSent(true);
+      setMessage(`Check ${OWNER_EMAIL} for your secure sign-in link. If it is not there, check your spam folder. You can request another link in five minutes.`);
+      const expiresAt = Date.now() + ADMIN_SIGN_IN_COOLDOWN_MS;
+      setCooldownSeconds(Math.ceil(ADMIN_SIGN_IN_COOLDOWN_MS / 1000));
+      try {
+        window.localStorage.setItem(ADMIN_SIGN_IN_COOLDOWN_KEY, String(expiresAt));
+      } catch (storageError) {
+        console.error("Could not save the admin sign-in cooldown:", storageError);
+      }
     } catch (signInError) {
       setError(signInError instanceof Error ? signInError.message : "Could not request a sign-in link.");
     } finally {
@@ -230,7 +276,8 @@ export function AdminLogin({ errorMessage, infoMessage }) {
       </div>
       <GlassPanel className="admin-login-card">
         <p className="text-sm leading-6 text-silver/80">
-          Send a one-time sign-in link to the owner inbox to manage portfolio projects and media.
+          Password-free sign-in. We&apos;ll email a one-time secure link to{" "}
+          <strong className="text-white">{OWNER_EMAIL}</strong>.
         </p>
         {error ? (
           <p role="alert" className="admin-notice admin-notice--error mt-5">
@@ -242,13 +289,29 @@ export function AdminLogin({ errorMessage, infoMessage }) {
             {message}
           </p>
         ) : null}
+        {linkSent ? (
+          <a
+            href={`https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(OWNER_EMAIL)}#inbox`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="admin-button mt-6"
+          >
+            Open Gmail
+          </a>
+        ) : null}
         <button
           type="button"
           onClick={sendSignInLink}
-          disabled={isSending}
-          className="admin-button mt-6"
+          disabled={isSending || cooldownSeconds > 0}
+          className={`admin-button ${linkSent ? "admin-button--secondary mt-3" : "mt-6"}`}
         >
-          {isSending ? "Sending link..." : "Send owner sign-in link"}
+          {isSending
+            ? "Sending email..."
+            : cooldownSeconds > 0
+              ? `Resend available in ${formatCooldown(cooldownSeconds)}`
+              : linkSent
+                ? "Resend sign-in link"
+                : "Email me a sign-in link"}
         </button>
       </GlassPanel>
     </main>
