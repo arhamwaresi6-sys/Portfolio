@@ -2056,7 +2056,8 @@ async function initLiquidGlassCarousel() {
       const hit = rectOf(e.clientX, e.clientY);
       if (!hit) return;
 
-      if (centeredPanel && hit.poolIdx === centeredPanel.poolIdx) {
+      const link = items[hit.srcIndex]?.querySelector('a[href]');
+      if (link?.target === '_blank' || (centeredPanel && hit.srcIndex === centeredPanel.srcIndex)) {
         followLink(hit.srcIndex, e);
         return;
       }
