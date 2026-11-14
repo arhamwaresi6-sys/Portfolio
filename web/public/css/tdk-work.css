@@ -5205,3 +5205,10 @@ body {
     scroll-behavior: smooth;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  #header,
+  #nav {
+    visibility: visible;
+  }
+}
