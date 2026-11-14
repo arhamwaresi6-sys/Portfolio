@@ -5121,6 +5121,14 @@ body {
     gap: 1rem;
   }
 
+  .section-footer .footer-last .flex-horizontal.space-between.is-stretch {
+    flex-direction: column;
+  }
+
+  .section-footer .footer-last .text-align-right {
+    text-align: left;
+  }
+
   .marquee-text {
     font-size: clamp(3.25rem, 15vw, 6rem);
   }
@@ -5205,7 +5213,7 @@ html {
   }
 
   .glass-carousel__counter {
-    bottom: 15%;
+    bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem));
   }
 
   .glass-carousel__loading-card {

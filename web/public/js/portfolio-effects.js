@@ -1413,9 +1413,9 @@ async function initLiquidGlassCarousel() {
   const lensShimmerDepth = .12, lensRimStart = .578, lensRimFreq1 = 2, lensRimFreq2 = 1;
   const lensRimLinePos = .488, lensRimLineWidth = .003, lensVignetteSize = .3, lensSamples = 16;
   const textureDetail = 1.5, narrowBreakpoint = 768, repeats = 4;
-  const ease = .085, wheelSpeed = 1.4, dragSpeed = 1.6, touchSpeed = 1, touchEase = .2;
-  const friction = .9, snapIdle = 280, snapEase = .028, shrinkMax = 60;
-  const shrinkAttack = .25, shrinkDecay = .06, clickSlop = 6, touchClickSlop = 12, flickIdle = 90;
+  const ease = .085, wheelSpeed = 1.4, dragSpeed = 1.6, touchSpeed = 1.7, touchEase = .3;
+  const friction = .9, snapIdle = 220, snapEase = .045, shrinkMax = 60;
+  const shrinkAttack = .25, shrinkDecay = .06, clickSlop = 6, touchClickSlop = 12, flickIdle = 160;
 
   const vertexShader = `varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}`;
 
@@ -1883,7 +1883,7 @@ async function initLiquidGlassCarousel() {
       return null;
     }
 
-    let dragging = false, dragPointerId = null, dragLastX = 0, dragDist = 0;
+    let dragging = false, dragPointerId = null, dragLastX = 0, dragDist = 0, dragStartTarget = 0;
     let dragVel = 0, dragMoveT = 0, suppressClick = false, dragPointerType = 'mouse';
     let lastPointerX = NaN, lastPointerY = NaN, pointerInside = false;
     let lastPointerType = 'mouse', pointerState = '';
@@ -1927,6 +1927,7 @@ async function initLiquidGlassCarousel() {
       startX = dragLastX = lastPointerX = e.clientX;
       startY = lastPointerY = e.clientY;
       dragDist = 0;
+      dragStartTarget = target;
       dragVel = 0;
       dragMoveT = performance.now();
       setHover(false);
@@ -1968,8 +1969,7 @@ async function initLiquidGlassCarousel() {
           touchDecided = true;
           dragging = true;
           try { el.setPointerCapture(e.pointerId); } catch {}
-          dragLastX = e.clientX;
-          dragMoveT = performance.now();
+          dragLastX = startX;
         } else {
           return;
         }
@@ -2002,14 +2002,24 @@ async function initLiquidGlassCarousel() {
       const wasDragging = dragging;
       dragging = false;
       touchDecided = false;
+      const cancelled = e && (e.type === 'pointercancel' || e.type === 'lostpointercapture');
+
+      if (!cancelled && wasDragging && dragPointerType !== 'mouse' && dragDist >= Math.max(72, W * .2)) {
+        const startIndex = nearestIndex(dragStartTarget);
+        if (nearestIndex(target) === startIndex) {
+          target = centerForIndex(startIndex + (target > dragStartTarget ? 1 : -1));
+        }
+      }
 
       if (dragPointerId !== null) {
         try { el.releasePointerCapture(dragPointerId); } catch {}
         dragPointerId = null;
       }
 
-      const cancelled = e && (e.type === 'pointercancel' || e.type === 'lostpointercapture');
-      velocity = cancelled || !wasDragging || performance.now() - dragMoveT > flickIdle ? 0 : dragVel;
+      const flickVelocity = dragPointerType === 'mouse'
+        ? dragVel
+        : Math.max(-W * .025, Math.min(W * .025, dragVel));
+      velocity = cancelled || !wasDragging || performance.now() - dragMoveT > flickIdle ? 0 : flickVelocity;
       dragVel = 0;
       lastInput = performance.now();
       snapped = false;
