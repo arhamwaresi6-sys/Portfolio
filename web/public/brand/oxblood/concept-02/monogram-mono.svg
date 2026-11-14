@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 100 100" role="img" aria-labelledby="title">
+  <title id="title">OXBLOOD SLASH APERTURE monogram in white</title>
+  
+  <g>
+      <circle cx="50" cy="50" r="37" fill="none" stroke="#F5F5F5" stroke-width="13"/>
+      <path d="m27 73 46-46" fill="none" stroke="#050505" stroke-width="19" stroke-linecap="square"/>
+      <path d="m30 70 40-40" fill="none" stroke="#F5F5F5" stroke-width="5" stroke-linecap="square"/>
+    </g>
+</svg>

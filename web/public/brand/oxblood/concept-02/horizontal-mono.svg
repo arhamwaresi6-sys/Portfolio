@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="124" viewBox="0 0 620 124" role="img" aria-labelledby="title">
+  <title id="title">OXBLOOD SLASH APERTURE horizontal logo in white</title>
+  
+  
+      <g transform="translate(7 12) scale(1)">
+      <circle cx="50" cy="50" r="37" fill="none" stroke="#F5F5F5" stroke-width="13"/>
+      <path d="m27 73 46-46" fill="none" stroke="#050505" stroke-width="19" stroke-linecap="square"/>
+      <path d="m30 70 40-40" fill="none" stroke="#F5F5F5" stroke-width="5" stroke-linecap="square"/>
+    </g>
+      <text x="142" y="71" fill="#F5F5F5" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="700" letter-spacing="8">OXBLOOD</text>
+      <text x="146" y="99" fill="#F5F5F5" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" letter-spacing="3.1">FULL-STACK DEVELOPER</text>
+    
+</svg>

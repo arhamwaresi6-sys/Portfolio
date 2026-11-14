@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100" role="img" aria-labelledby="title">
+  <title id="title">OXBLOOD SLASH APERTURE favicon</title>
+  <rect width="100%" height="100%" rx="18" fill="#050505"/>
+  <g transform="translate(9 9) scale(.82)">
+      <circle cx="50" cy="50" r="37" fill="none" stroke="#D00020" stroke-width="13"/>
+      <path d="m27 73 46-46" fill="none" stroke="#050505" stroke-width="19" stroke-linecap="square"/>
+      <path d="m30 70 40-40" fill="none" stroke="#D00020" stroke-width="5" stroke-linecap="square"/>
+    </g>
+</svg>
