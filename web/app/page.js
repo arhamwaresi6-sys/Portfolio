@@ -30,6 +30,45 @@ const gmailComposeLink = `https://mail.google.com/mail/?${new URLSearchParams({
   body: contactBody,
 })}`;
 
+const contactIcons = {
+  phone: (
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.2 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.84.58 2.8.7A2 2 0 0 1 22 16.92Z" />
+  ),
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </>
+  ),
+  linkedin: (
+    <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.37V9h3.41v1.56h.05c.47-.89 1.64-1.83 3.37-1.83 3.6 0 4.26 2.37 4.26 5.46v6.26ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12Zm1.78 13.02H3.56V9h3.56v11.45Z" />
+  ),
+  instagram: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r=".75" fill="currentColor" stroke="none" />
+    </>
+  ),
+};
+
+function ContactIcon({ name }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4 shrink-0"
+      fill={name === "linkedin" ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+      viewBox="0 0 24 24"
+    >
+      {contactIcons[name]}
+    </svg>
+  );
+}
+
 const stats = [
   {
     label: "Services",
@@ -389,13 +428,19 @@ export default function Home() {
                     <div data-reveal-group="" className="flex-horizontal space-between is-stretch">
                       <div className="flex-vertical gap-s">
                         <div className="flex-vertical">
-                          <h6>Phone</h6>
+                          <h6 className="flex items-center gap-2">
+                            <ContactIcon name="phone" />
+                            Phone
+                          </h6>
                           <a data-link-stagger="" href="tel:+8801623619790" className="heading-style-h6">
                             +880 1623-619790
                           </a>
                         </div>
                         <div className="flex-vertical">
-                          <h6>Mail</h6>
+                          <h6 className="flex items-center gap-2">
+                            <ContactIcon name="mail" />
+                            Mail
+                          </h6>
                           <a href={contactEmailLink} data-link-stagger="" className="heading-style-h6">
                             {contactEmail}
                           </a>
@@ -413,20 +458,25 @@ export default function Home() {
 
                       <div className="flex-vertical gap-s">
                         <div className="flex-vertical">
-                          <h6 className="text-align-right">Linkedin</h6>
-                          {/* TODO: replace with your LinkedIn */}
+                          <h6 className="flex items-center justify-end gap-2 text-align-right max-md:justify-start">
+                            <ContactIcon name="linkedin" />
+                            LinkedIn
+                          </h6>
                           <a
                             data-link-stagger=""
-                            href="#"
+                            href="https://www.linkedin.com/in/arham-waresi-7b0058423?utm_source=share_via&utm_content=profile&utm_medium=member_ios"
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noopener noreferrer"
                             className="heading-style-h6 text-align-right"
                           >
-                            Profile coming soon
+                            View LinkedIn profile
                           </a>
                         </div>
                         <div className="flex-vertical">
-                          <h6 className="text-align-right">Instagram</h6>
+                          <h6 className="flex items-center justify-end gap-2 text-align-right max-md:justify-start">
+                            <ContactIcon name="instagram" />
+                            Instagram
+                          </h6>
                           <a
                             data-link-stagger=""
                             href="https://www.instagram.com/arham_waresi/"
