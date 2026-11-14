@@ -5217,3 +5217,132 @@ html {
     visibility: visible;
   }
 }
+
+.glass-carousel--loading {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.glass-carousel__stage--loading {
+  position: relative;
+  top: auto;
+  height: 100vh;
+  height: 100svh;
+}
+
+.glass-carousel__loading-title,
+.glass-carousel__loading-status {
+  position: absolute;
+  z-index: 2;
+  left: 1rem;
+  right: 1rem;
+  margin: 0;
+  color: rgba(239, 238, 236, 0.72);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.glass-carousel__loading-title {
+  top: max(5rem, calc(env(safe-area-inset-top, 0px) + 4rem));
+}
+
+.glass-carousel__loading-status {
+  bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem));
+}
+
+.glass-carousel__loading-card {
+  width: min(78vw, 42rem);
+  aspect-ratio: 3 / 2;
+  border: 1px solid rgba(239, 238, 236, 0.1);
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.035) 8%,
+    rgba(155, 92, 255, 0.13) 18%,
+    rgba(255, 255, 255, 0.035) 33%
+  );
+  background-size: 200% 100%;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.22);
+  animation: project-loading-shimmer 1.8s linear infinite;
+}
+
+@media (max-width: 767px) {
+  .glass-carousel__stage {
+    isolation: isolate;
+  }
+
+  .glass-carousel__stage::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 0;
+    width: min(94vw, 34rem);
+    height: min(62svh, 32rem);
+    border: 1px solid rgba(155, 92, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse, rgba(155, 92, 255, 0.055), transparent 68%);
+    box-shadow: 0 0 3rem rgba(155, 92, 255, 0.06), inset 0 0 2rem rgba(155, 92, 255, 0.035);
+    content: "";
+    pointer-events: none;
+    animation: project-ring-breathe 5s ease-in-out infinite;
+  }
+
+  .glass-carousel__canvas {
+    z-index: 1;
+  }
+
+  .glass-carousel__caption,
+  .glass-carousel__counter {
+    z-index: 2;
+  }
+
+  .glass-carousel__caption {
+    top: max(5rem, calc(env(safe-area-inset-top, 0px) + 4rem));
+    width: min(100%, 36rem);
+  }
+
+  .glass-carousel__counter {
+    bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem));
+  }
+
+  .glass-carousel__loading-card {
+    width: min(84vw, 30rem);
+  }
+
+  .glass-carousel--ready {
+    animation: project-carousel-enter 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes project-loading-shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@keyframes project-ring-breathe {
+  50% {
+    transform: translate(-50%, -50%) scale(1.01);
+    opacity: 0.68;
+  }
+}
+
+@keyframes project-carousel-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-carousel__stage::before,
+  .glass-carousel__loading-card,
+  .glass-carousel--ready {
+    animation: none;
+  }
+}

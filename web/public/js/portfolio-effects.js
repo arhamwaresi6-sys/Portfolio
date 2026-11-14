@@ -1403,7 +1403,7 @@ async function initLiquidGlassCarousel() {
   let THREE;
 
   const panelHeight = .60, panelGap = 40, wheel = 'horizontal';
-  const panelAspect = 3 / 2, panelWidthMax = .78, panelWidthMaxNarrow = .88;
+  const panelAspect = 3 / 2, panelWidthMax = .78, panelWidthMaxNarrow = .82;
   const lensWidth = 1, lensHeight = .6, lensRotation = 90;
   const lensWidthNarrow = 1, lensHeightNarrow = .7, lensRotationNarrow = 90;
   const lensColor = '#9b5cff', lensGlow = 4, lensRing = 1, lensRingRadius = .49;
@@ -1508,7 +1508,8 @@ async function initLiquidGlassCarousel() {
 
     let W = Math.max(1, mount.clientWidth), H = Math.max(1, mount.clientHeight);
     let narrow = W < narrowBreakpoint, panelH = 0;
-    const compactRender = () => narrow || matchMedia('(pointer: coarse)').matches;
+    const coarsePointer = matchMedia('(pointer: coarse)');
+    const compactRender = () => narrow || coarsePointer.matches;
     const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1 : 1.5);
     let renderer;
 
@@ -1539,7 +1540,8 @@ async function initLiquidGlassCarousel() {
       aspect: panelAspect,
       image: item.querySelector('[data-glass-carousel-image]') ||
         item.querySelector('.bunny-bg__placeholder') || item.querySelector('img'),
-      video: item.querySelector('[data-bunny-background-init] video') || item.querySelector('video')
+      video: item.querySelector('[data-bunny-background-init] video') || item.querySelector('video'),
+      videoRequested: false
     }));
 
     const loader = new THREE.TextureLoader();
@@ -1593,7 +1595,11 @@ async function initLiquidGlassCarousel() {
     measurePanel();
 
     function slotWidth(index) {
-      return sources[index].aspect * panelH + panelGap;
+      return sources[index].aspect * panelH + slotGap();
+    }
+
+    function slotGap() {
+      return compactRender() ? 12 : panelGap;
     }
 
     let offsets = [], totalWidth = 0;
@@ -1611,7 +1617,7 @@ async function initLiquidGlassCarousel() {
     recomputeTotal();
 
     function slotCenter(index) {
-      return offsets[index] + slotWidth(index) / 2 - panelGap / 2;
+      return offsets[index] + slotWidth(index) / 2 - slotGap() / 2;
     }
 
     function centerForIndex(index) {
@@ -1810,6 +1816,7 @@ async function initLiquidGlassCarousel() {
     function layout() {
       panelRects = [];
       centeredPanel = null;
+      const simpleLayout = compactRender();
 
       let centeredDist = Infinity;
       const half = W / 2;
@@ -1832,9 +1839,12 @@ async function initLiquidGlassCarousel() {
           return;
         }
 
-        const shrink = 1 - .25 * scrollEnergy;
-        const h = panelH * shrink;
-        const w = src.aspect * panelH * shrink;
+        const shrink = 1 - (simpleLayout ? .04 : .25) * scrollEnergy;
+        const focusDistance = simpleLayout ? Math.min(1, Math.abs(centerX) / (W * 0.85)) : 0;
+        const orbit = simpleLayout ? focusDistance * focusDistance * (3 - 2 * focusDistance) : 0;
+        const focusScale = simpleLayout ? 1 - orbit * 0.07 : 1;
+        const h = panelH * shrink * focusScale;
+        const w = src.aspect * panelH * shrink * focusScale;
 
         if (src.tex && p.boundTex !== src.tex) {
           p.mat.map = src.tex;
@@ -1844,12 +1854,17 @@ async function initLiquidGlassCarousel() {
         }
 
         p.mesh.visible = true;
-        p.mesh.position.set(centerX, 0, 0);
+        const rotationY = simpleLayout ? -Math.sign(centerX) * orbit * 0.28 : 0;
+        p.mesh.position.set(centerX, 0, -orbit * 5);
+        p.mesh.rotation.y = rotationY;
+        p.mat.opacity = simpleLayout ? 1 - orbit * 0.16 : 1;
+        if (p.mesh.geometry !== panelGeometry) p.mesh.geometry = panelGeometry;
         p.mesh.scale.set(w, h, 1);
+        const hitWidth = w * Math.cos(rotationY);
 
         const sx = centerX + W / 2, sy = H / 2;
         panelRects.push({
-          left: sx - w / 2, right: sx + w / 2,
+          left: sx - hitWidth / 2, right: sx + hitWidth / 2,
           top: sy - h / 2, bottom: sy + h / 2,
           poolIdx, srcIndex: i, centerX
         });
@@ -2122,6 +2137,15 @@ async function initLiquidGlassCarousel() {
           source.visible = on;
           player?._setBunnyVisible?.(on);
         }
+        if (on && source.video && !source.videoRequested && !reduceMotion()) {
+          const videoUrl = source.video.dataset.projectSrc;
+          if (videoUrl) {
+            source.video.preload = 'metadata';
+            source.video.src = videoUrl;
+            source.video.load();
+            source.videoRequested = true;
+          }
+        }
         if (retry && on) player?._requestBunnyPlay?.();
       });
     }
@@ -2185,12 +2209,18 @@ async function initLiquidGlassCarousel() {
       lensUniforms.uTime.value = performance.now() * .001;
 
       renderer.setClearColor(0x000000, 0);
-      renderer.setRenderTarget(rt);
-      renderer.clear();
-      renderer.render(scene, camera);
-      renderer.setRenderTarget(null);
-      renderer.clear();
-      renderer.render(lensScene, lensCam);
+      if (compactRender()) {
+        renderer.setRenderTarget(null);
+        renderer.clear();
+        renderer.render(scene, camera);
+      } else {
+        renderer.setRenderTarget(rt);
+        renderer.clear();
+        renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        renderer.clear();
+        renderer.render(lensScene, lensCam);
+      }
 
       raf = requestAnimationFrame(tick);
     }

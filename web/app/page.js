@@ -77,7 +77,7 @@ async function WorkSection() {
       data-glass-carousel=""
       data-scroll-scrub-section=""
       data-scrub-seconds-per-screen="4"
-      className="glass-carousel"
+      className="glass-carousel glass-carousel--ready"
     >
       <CarouselHydrationReady />
       <div className="glass-carousel__stage">
@@ -106,12 +106,12 @@ async function WorkSection() {
                       aria-hidden="true"
                       crossOrigin="anonymous"
                       data-project-title={project.title}
+                      data-project-src={project.video}
                       data-scroll-scrub-video=""
                       muted
                       playsInline
                       poster={project.image}
-                      preload="auto"
-                      src={project.video}
+                      preload="none"
                       className="bunny-bg__video"
                     />
                   ) : null}
@@ -345,8 +345,12 @@ export default function Home() {
 
         <Suspense
           fallback={
-            <section id="work" className="padding-global">
-              <p role="status" className="text-sm text-silver/70">Loading projects...</p>
+            <section id="work" className="glass-carousel glass-carousel--loading" aria-busy="true">
+              <div className="glass-carousel__stage glass-carousel__stage--loading">
+                <p className="glass-carousel__loading-title">Selected work</p>
+                <div className="glass-carousel__loading-card" aria-hidden="true" />
+                <p role="status" className="glass-carousel__loading-status">Loading projects...</p>
+              </div>
             </section>
           }
         >
