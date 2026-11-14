@@ -4095,7 +4095,7 @@ figcaption {
 }
 
 .glass-carousel__caption {
-  pointer-events: none;
+  pointer-events: auto;
   text-align: center;
   color: rgba(239, 238, 236, 0.92);
   padding-left: 1em;
@@ -4106,6 +4106,27 @@ figcaption {
   transform: translate(-50%);
   z-index: 2;
   text-wrap: balance;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.glass-carousel__caption-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(239, 238, 236, 0.35);
+  border-radius: 999px;
+  padding: 0.5rem 0.8rem;
+  background: rgba(11, 11, 11, 0.55);
+  color: rgba(239, 238, 236, 0.9);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .glass-carousel__list {

@@ -1509,6 +1509,7 @@ async function initLiquidGlassCarousel() {
     if (!mount || !items.length || wrapper.getAttribute('data-glass-carousel') === 'canvas') return null;
 
     const captionEl = wrapper.querySelector('[data-glass-carousel-caption]');
+    const captionContentEl = captionEl?.querySelector('[data-glass-carousel-caption-content]');
     const counterEl = wrapper.querySelector('[data-glass-carousel-counter]');
     const total = items.length;
 
@@ -2120,14 +2121,20 @@ async function initLiquidGlassCarousel() {
 
       const content = items[index].querySelector('[data-glass-carousel-content]');
       if (captionEl) {
+        const activeLink = items[index].querySelector('a[href]');
+        if (activeLink) {
+          captionEl.href = activeLink.href;
+          captionEl.setAttribute('aria-label', activeLink.getAttribute('aria-label') || activeLink.textContent.trim());
+        }
+
         gsap.killTweensOf(captionEl);
-        captionEl.replaceChildren();
+        captionContentEl?.replaceChildren();
         if (!content) return;
 
         const clone = content.cloneNode(true);
         clone.removeAttribute('id');
         clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-        captionEl.append(clone);
+        captionContentEl?.append(clone);
 
         gsap.fromTo(captionEl, { yPercent: 25, autoAlpha: 0 }, {
           yPercent: 0, autoAlpha: 1, duration: .4, ease: 'power3.out'

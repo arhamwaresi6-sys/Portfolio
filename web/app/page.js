@@ -136,7 +136,16 @@ async function WorkSection() {
         </div>
       </div>
 
-      <div aria-live="polite" data-glass-carousel-caption="" className="glass-carousel__caption" />
+      <a
+        href={projects[0].liveUrl || (projects[0].slug ? `/projects/${projects[0].slug}` : "/projects")}
+        aria-label={`Visit ${projects[0].title} live website`}
+        aria-live="polite"
+        data-glass-carousel-caption=""
+        className="glass-carousel__caption"
+      >
+        <span data-glass-carousel-caption-content="" />
+        <span className="glass-carousel__caption-cta">Visit website <span aria-hidden="true">↗</span></span>
+      </a>
       <div data-glass-carousel-counter="" className="glass-carousel__counter" />
     </section>
   ) : (
