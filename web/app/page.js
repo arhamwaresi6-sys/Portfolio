@@ -3,11 +3,13 @@ import { connection } from "next/server";
 import { getPublishedProjects } from "@/lib/projects";
 import { getPublishedProfileImageUrl } from "@/lib/site-settings";
 import { CarouselHydrationReady } from "@/components/effects/CarouselHydrationReady";
+import { SkillsSection } from "@/components/sections/SkillsSection";
 import { BrandMark } from "@/components/ui/BrandMark";
 
 const navItems = [
   { href: "#info", label: "INFO" },
   { href: "#about", label: "ABOUT" },
+  { href: "#skills", label: "SKILLS" },
   { href: "#work", label: "WORK" },
   { href: "#contact", label: "CONTACT" },
 ];
@@ -312,6 +314,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <SkillsSection />
 
         <section>
           <div className="padding-global">
