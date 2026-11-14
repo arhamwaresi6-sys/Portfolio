@@ -898,6 +898,9 @@ a {
 }
 
 .skills-card__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.48rem 0.72rem;
   border: 1px solid rgb(245 242 250 / 14%);
   border-radius: 999px;
@@ -908,6 +911,18 @@ a {
     border-color 250ms ease,
     color 250ms ease,
     background-color 250ms ease;
+}
+
+.skills-card__icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.skills-card__icon--monochrome {
+  filter: brightness(0) invert(1);
+  opacity: 0.82;
 }
 
 .skills-card:hover .skills-card__chip {

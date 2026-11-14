@@ -1,31 +1,59 @@
+import Image from "next/image";
+
 const skillGroups = [
   {
     number: "01",
     label: "WEB",
     title: "Frontend",
     description: "Building expressive, responsive experiences for the web.",
-    skills: ["HTML", "CSS", "JavaScript", "React", "Next.js"],
+    skills: [
+      { name: "HTML", icon: "https://cdn.simpleicons.org/html5/E34F26" },
+      { name: "CSS", icon: "https://cdn.simpleicons.org/css/663399" },
+      { name: "JavaScript", icon: "https://cdn.simpleicons.org/javascript/F7DF1E" },
+      { name: "React", icon: "https://cdn.simpleicons.org/react/61DAFB" },
+      { name: "Next.js", icon: "https://cdn.simpleicons.org/nextdotjs/FFFFFF" },
+    ],
   },
   {
     number: "02",
     label: "SERVER",
     title: "Backend & code",
     description: "Turning product ideas into dependable application logic.",
-    skills: ["Python", "Flask", "C", "C++"],
+    skills: [
+      { name: "Python", icon: "https://cdn.simpleicons.org/python/3776AB" },
+      { name: "Flask", icon: "https://cdn.simpleicons.org/flask/FFFFFF" },
+      { name: "C", icon: "https://cdn.simpleicons.org/c/A8B9CC" },
+      { name: "C++", icon: "https://cdn.simpleicons.org/cplusplus/00599C" },
+    ],
   },
   {
     number: "03",
     label: "DATA",
     title: "Databases",
     description: "Working with structured data and relational databases.",
-    skills: ["MySQL", "PostgreSQL"],
+    skills: [
+      { name: "MySQL", icon: "https://cdn.simpleicons.org/mysql/4479A1" },
+      { name: "PostgreSQL", icon: "https://cdn.simpleicons.org/postgresql/4169E1" },
+    ],
   },
   {
     number: "04",
     label: "DESIGN / MOTION",
     title: "Design & interaction",
     description: "Pairing visual craft with motion that makes interfaces feel alive.",
-    skills: ["Figma", "CSS animations", "Scroll effects"],
+    skills: [
+      { name: "Figma", icon: "https://cdn.simpleicons.org/figma/F24E1E" },
+      {
+        name: "CSS animations",
+        icon: "https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/sparkles.svg",
+        monochrome: true,
+      },
+      {
+        name: "Scroll effects",
+        icon: "https://cdn.jsdelivr.net/npm/lucide-static@0.468.0/icons/chevrons-down.svg",
+        monochrome: true,
+      },
+    ],
   },
 ];
 
@@ -64,8 +92,17 @@ export function SkillsSection() {
               <p className="skills-card__description">{group.description}</p>
               <ul className="skills-card__list" aria-label={`${group.title} skills`}>
                 {group.skills.map((skill) => (
-                  <li className="skills-card__chip" key={skill}>
-                    {skill}
+                  <li className="skills-card__chip" key={skill.name}>
+                    <Image
+                      className={`skills-card__icon${skill.monochrome ? " skills-card__icon--monochrome" : ""}`}
+                      src={skill.icon}
+                      alt=""
+                      aria-hidden="true"
+                      width={16}
+                      height={16}
+                      unoptimized
+                    />
+                    {skill.name}
                   </li>
                 ))}
               </ul>
