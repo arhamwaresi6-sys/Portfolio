@@ -71,6 +71,7 @@ async function WorkSection() {
     type: project.category,
     image: project.image_urls?.[0] ?? "/images/project-placeholder.svg",
     video: project.video_media_url,
+    liveUrl: project.live_url,
   }));
 
   return projects.length ? (
@@ -89,9 +90,15 @@ async function WorkSection() {
           {projects.map((project) => (
             <div key={project.id} data-glass-carousel-item="" className="glass-carousel__item">
               <Link
-                href={project.slug ? `/projects/${project.slug}` : "/projects"}
+                href={project.liveUrl || (project.slug ? `/projects/${project.slug}` : "/projects")}
+                target={project.liveUrl ? "_blank" : undefined}
+                rel={project.liveUrl ? "noopener noreferrer" : undefined}
                 className="glass-carousel__item-link"
-                aria-label={`View ${project.title} project`}
+                aria-label={
+                  project.liveUrl
+                    ? `Visit ${project.title} live website in a new tab`
+                    : `View ${project.title} project`
+                }
               >
                 <div
                   data-bunny-background-init={project.video ? "" : undefined}
