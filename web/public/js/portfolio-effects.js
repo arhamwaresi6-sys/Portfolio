@@ -1264,7 +1264,12 @@ function initBunnyPlayerBackground() {
       const preferNative = native && 'ManagedMediaSource' in window;
 
       if (!preferNative && window.Hls?.isSupported()) {
-        hls = new Hls({ maxBufferLength: 10, backBufferLength: 10 });
+        hls = new Hls({
+          maxBufferLength: 10,
+          backBufferLength: 10,
+          capLevelToPlayerSize: false,
+          abrEwmaDefaultEstimate: 2_500_000 // Let short clips start above HLS.js's low default, while remaining adaptive.
+        });
         player._hls = hls;
 
         hls.on(Hls.Events.MEDIA_ATTACHED, () => {
@@ -1408,7 +1413,8 @@ async function initLiquidGlassCarousel() {
   const lensWidthNarrow = 1, lensHeightNarrow = .7, lensRotationNarrow = 90;
   const lensColor = '#9b5cff', lensGlow = 4, lensRing = 1, lensRingRadius = .49;
   const lensRingWidth = .01, lensRimLine = 1, lensNova = 0, lensDispersion = 11;
-  const lensRimWave = .3, lensZoom = .4, lensVignette = 0, lensShimmer = true;
+  const lensDispersionNarrow = 5;
+  const lensRimWave = .3, lensZoom = .4, lensZoomNarrow = .2, lensVignette = 0, lensShimmer = true;
   const lensNovaSize = 12, lensShimmerFreq = 12, lensShimmerSpeed = 3.5;
   const lensShimmerDepth = .12, lensRimStart = .578, lensRimFreq1 = 2, lensRimFreq2 = 1;
   const lensRimLinePos = .488, lensRimLineWidth = .003, lensVignetteSize = .3, lensSamples = 16;
@@ -1511,7 +1517,7 @@ async function initLiquidGlassCarousel() {
     const coarsePointer = matchMedia('(pointer: coarse)');
     const compactRender = () => narrow || coarsePointer.matches;
     // Cap DPR a bit on touch/narrow for performance, but keep the glass lens path.
-    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1.25 : 2);
+    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1.5 : 2);
     let renderer;
 
     try {
@@ -1757,8 +1763,8 @@ async function initLiquidGlassCarousel() {
       uSizeY: { value: (narrow ? lensHeightNarrow : lensHeight) * (W / H) },
       uRotation: { value: 0 },
       uAspect: { value: W / H },
-      uZoom: { value: lensZoom },
-      uDispersion: { value: lensDispersion },
+      uZoom: { value: narrow ? lensZoomNarrow : lensZoom },
+      uDispersion: { value: narrow ? lensDispersionNarrow : lensDispersion },
       uGlow: { value: lensGlow },
       uWhiteGlow: { value: lensNova },
       uNovaSize: { value: lensNovaSize },
@@ -1804,6 +1810,8 @@ async function initLiquidGlassCarousel() {
       lensUniforms.uSizeX.value = (narrow ? lensWidthNarrow : lensWidth) * (W / H);
       lensUniforms.uSizeY.value = (narrow ? lensHeightNarrow : lensHeight) * (W / H);
       lensUniforms.uRotation.value = ((narrow ? lensRotationNarrow : lensRotation) * Math.PI) / 180;
+      lensUniforms.uZoom.value = narrow ? lensZoomNarrow : lensZoom;
+      lensUniforms.uDispersion.value = narrow ? lensDispersionNarrow : lensDispersion;
       lensUniforms.uSamples.value = compactRender() ? Math.min(lensSamples, 8) : lensSamples;
     }
 
