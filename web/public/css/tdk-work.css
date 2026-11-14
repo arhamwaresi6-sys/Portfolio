@@ -5000,3 +5000,208 @@ figcaption {
 #w-node-_1d7edd9a-c0a2-fdac-6869-db989cef2c6d-63c7f6b9 {
   grid-area: 1 / 2 / 2 / 3;
 }
+
+html {
+  overflow-x: clip;
+  scroll-padding-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+}
+
+body {
+  overflow-x: clip;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .skills-card:hover {
+    transform: none;
+    border-color: rgb(245 242 250 / 12%);
+  }
+
+  .skills-card:hover .skills-card__glow {
+    transform: none;
+    opacity: 0.12;
+  }
+
+  .skills-card:hover .skills-card__chip {
+    border-color: rgb(245 242 250 / 14%);
+  }
+}
+
+@media (max-width: 991px) {
+  .navbar {
+    padding:
+      calc(1rem + env(safe-area-inset-top, 0px))
+      max(1rem, env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      max(1rem, env(safe-area-inset-left, 0px));
+  }
+
+  .nav-button {
+    min-width: 44px;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nav-link {
+    font-size: clamp(3rem, 10vw, 6rem);
+  }
+
+  .section__info {
+    height: auto;
+    padding-top: clamp(4rem, 10vh, 7rem);
+    padding-bottom: clamp(4rem, 10vh, 7rem);
+  }
+}
+
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+  }
+
+  .padding-global {
+    padding-left: clamp(1rem, 5vw, 1.5rem);
+    padding-right: clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .section__header {
+    box-sizing: border-box;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-top: calc(5rem + env(safe-area-inset-top, 0px));
+    padding-bottom: clamp(4rem, 12vh, 7rem);
+  }
+
+  .section__header h1 {
+    max-width: 100%;
+    font-size: clamp(3.5rem, 15vw, 7.25rem);
+    line-height: 0.84;
+    letter-spacing: -0.075em;
+  }
+
+  .header-intro__wrap {
+    gap: 0.75rem;
+  }
+
+  .header-text-wrapper {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .header-text-wrapper p {
+    font-size: clamp(0.875rem, 3.8vw, 1rem);
+    line-height: 1.5;
+  }
+
+  .section__info ._2-col.is-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .image-sequence__sticky {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  .glass-carousel__stage {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  .glass-carousel__caption {
+    top: max(5rem, 12svh);
+    max-width: 36rem;
+  }
+
+  .footer-base {
+    height: auto;
+    min-height: 65svh;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .footer-gradient {
+    opacity: 0.55;
+  }
+
+  .skills-card__glow {
+    filter: blur(3rem);
+  }
+}
+
+@media (max-width: 479px) {
+  .padding-global {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  .navbar {
+    padding:
+      calc(0.5rem + env(safe-area-inset-top, 0px))
+      max(1rem, env(safe-area-inset-right, 0px))
+      calc(0.5rem + env(safe-area-inset-bottom, 0px))
+      max(1rem, env(safe-area-inset-left, 0px));
+  }
+
+  .navbar-link-wrapper {
+    gap: 0.75rem;
+    padding:
+      calc(4rem + env(safe-area-inset-top, 0px))
+      1rem
+      calc(2rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-link {
+    font-size: clamp(2.75rem, 12vw, 4.25rem);
+  }
+
+  .section__header {
+    padding-bottom: clamp(4rem, 12vh, 6rem);
+  }
+
+  .stats-wrapper {
+    display: grid;
+    grid-template-columns: minmax(5rem, 0.75fr) minmax(0, 1.25fr);
+    gap: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .stats-wrapper > h6:last-of-type {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .section-footer .padding-medium {
+    padding: 0.75rem;
+  }
+
+  .section-footer a {
+    overflow-wrap: anywhere;
+  }
+
+  .section-footer .flex-horizontal.space-between.is-stretch {
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .marquee-text {
+    font-size: clamp(3.25rem, 15vw, 6rem);
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 991px) {
+  .section__header {
+    padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+    padding-bottom: 3rem;
+  }
+
+  .image-sequence__element {
+    max-height: 70svh;
+  }
+}
+
+@media (max-width: 991px) and (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}

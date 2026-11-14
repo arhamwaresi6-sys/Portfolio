@@ -695,10 +695,10 @@ function initSequenceElementResize() {
 
       gsap.fromTo(element, {
         width: mobile ? '60vw' : '35vw',
-        height: mobile ? '50vh' : '100vh'
+        height: mobile ? '50svh' : '100vh'
       }, {
         width: mobile ? '90vw' : '25vw',
-        height: mobile ? '70vh' : '65vh',
+        height: mobile ? '70svh' : '65vh',
         ease: 'none',
         scrollTrigger: {
           trigger: wrap, start: 'top top', end: 'bottom top',
@@ -1411,6 +1411,8 @@ async function initLiquidGlassCarousel() {
 
     let W = Math.max(1, mount.clientWidth), H = Math.max(1, mount.clientHeight);
     let narrow = W < narrowBreakpoint, panelH = 0;
+    const compactRender = () => narrow || matchMedia('(pointer: coarse)').matches;
+    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1 : 1.5);
     let renderer;
 
     try {
@@ -1419,7 +1421,7 @@ async function initLiquidGlassCarousel() {
       return null;
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(renderPixelRatio());
     renderer.setSize(W, H, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.NoToneMapping;
@@ -1679,7 +1681,7 @@ async function initLiquidGlassCarousel() {
       uRimLineWidth: { value: lensRimLineWidth },
       uVignette: { value: lensVignette },
       uVignetteSize: { value: lensVignetteSize },
-      uSamples: { value: lensSamples }
+      uSamples: { value: compactRender() ? Math.min(lensSamples, 8) : lensSamples }
     };
 
     const lensMat = new THREE.ShaderMaterial({
@@ -1703,6 +1705,7 @@ async function initLiquidGlassCarousel() {
       lensUniforms.uSizeX.value = (narrow ? lensWidthNarrow : lensWidth) * (W / H);
       lensUniforms.uSizeY.value = (narrow ? lensHeightNarrow : lensHeight) * (W / H);
       lensUniforms.uRotation.value = ((narrow ? lensRotationNarrow : lensRotation) * Math.PI) / 180;
+      lensUniforms.uSamples.value = compactRender() ? Math.min(lensSamples, 8) : lensSamples;
     }
 
     let panelRects = [], centeredPanel = null;
@@ -2063,7 +2066,8 @@ async function initLiquidGlassCarousel() {
 
       W = nextW;
       H = nextH;
-      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+      narrow = nextW < narrowBreakpoint;
+      renderer.setPixelRatio(renderPixelRatio());
       renderer.setSize(W, H, false);
 
       camera.left = -W / 2;
@@ -2073,7 +2077,6 @@ async function initLiquidGlassCarousel() {
       camera.updateProjectionMatrix();
 
       rt.setSize(bufferW(), bufferH());
-      narrow = W < narrowBreakpoint;
       applyLook();
       layout();
       syncVideos();
@@ -2607,9 +2610,29 @@ function initMotionEffects() {
 }
 
 function initSmoothScroll() {
-  if (reduceMotion() || !window.LocomotiveScroll) return;
-  const scroll = new LocomotiveScroll();
-  return () => scroll.destroy?.();
+  if (!window.LocomotiveScroll) return;
+
+  const nativeScroll = matchMedia('(pointer: coarse), (max-width: 991px)');
+  const events = eventScope();
+  let scroll = null;
+
+  const syncScrollMode = () => {
+    if (reduceMotion() || nativeScroll.matches) {
+      scroll?.destroy?.();
+      scroll = null;
+    } else if (!scroll) {
+      scroll = new LocomotiveScroll();
+    }
+  };
+
+  events.on(nativeScroll, 'change', syncScrollMode);
+  events.on(motionQuery, 'change', syncScrollMode);
+  syncScrollMode();
+
+  return () => {
+    events.destroy();
+    scroll?.destroy?.();
+  };
 }
 
 function boot() {
