@@ -1413,9 +1413,9 @@ async function initLiquidGlassCarousel() {
   const lensShimmerDepth = .12, lensRimStart = .578, lensRimFreq1 = 2, lensRimFreq2 = 1;
   const lensRimLinePos = .488, lensRimLineWidth = .003, lensVignetteSize = .3, lensSamples = 16;
   const textureDetail = 1.5, narrowBreakpoint = 768, repeats = 4;
-  const ease = .085, wheelSpeed = 1.4, dragSpeed = 1.6, touchSpeed = 1.7, touchEase = .3;
-  const friction = .9, snapIdle = 220, snapEase = .045, shrinkMax = 60;
-  const shrinkAttack = .25, shrinkDecay = .06, clickSlop = 6, touchClickSlop = 12, flickIdle = 160;
+  const ease = .085, wheelSpeed = 1.4, dragSpeed = 1.6, touchSpeed = 2.6, touchEase = .62;
+  const friction = .9, touchFriction = .82, snapIdle = 160, snapEase = .05, shrinkMax = 60;
+  const shrinkAttack = .25, shrinkDecay = .06, clickSlop = 6, touchClickSlop = 10, flickIdle = 180;
 
   const vertexShader = `varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}`;
 
