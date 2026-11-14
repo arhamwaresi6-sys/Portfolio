@@ -4089,7 +4089,9 @@ figcaption {
   scroll-snap-align: center;
   scroll-snap-stop: normal;
   flex: none;
-  height: 60%;
+  width: min(78vw, calc(60svh * 3 / 2));
+  height: auto;
+  max-height: 60svh;
   position: relative;
   border-radius: 0.35rem;
   overflow: hidden;
@@ -4974,6 +4976,11 @@ figcaption {
 
   .navbar-link-wrapper {
     display: none;
+  }
+
+  .glass-carousel__item {
+    width: min(88vw, calc(52svh * 3 / 2));
+    max-height: 52svh;
   }
 
   .glass-carousel__item-p {

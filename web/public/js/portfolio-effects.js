@@ -1306,6 +1306,7 @@ async function initLiquidGlassCarousel() {
   let THREE;
 
   const panelHeight = .60, panelGap = 40, wheel = 'horizontal';
+  const panelAspect = 3 / 2, panelWidthMax = .78, panelWidthMaxNarrow = .88;
   const lensWidth = 1, lensHeight = .6, lensRotation = 90;
   const lensWidthNarrow = 1, lensHeightNarrow = .7, lensRotationNarrow = 90;
   const lensColor = '#9b5cff', lensGlow = 4, lensRing = 1, lensRingRadius = .49;
@@ -1314,7 +1315,7 @@ async function initLiquidGlassCarousel() {
   const lensNovaSize = 12, lensShimmerFreq = 12, lensShimmerSpeed = 3.5;
   const lensShimmerDepth = .12, lensRimStart = .578, lensRimFreq1 = 2, lensRimFreq2 = 1;
   const lensRimLinePos = .488, lensRimLineWidth = .003, lensVignetteSize = .3, lensSamples = 16;
-  const textureDetail = 1.5, panelWidthMax = .78, narrowBreakpoint = 768, repeats = 4;
+  const textureDetail = 1.5, narrowBreakpoint = 768, repeats = 4;
   const ease = .085, wheelSpeed = 1.4, dragSpeed = 1.6, touchSpeed = 1, touchEase = .2;
   const friction = .9, snapIdle = 280, snapEase = .028, shrinkMax = 60;
   const shrinkAttack = .25, shrinkDecay = .06, clickSlop = 6, touchClickSlop = 12, flickIdle = 90;
@@ -1436,7 +1437,7 @@ async function initLiquidGlassCarousel() {
       tex: null,
       imageTex: null,
       videoTex: null,
-      aspect: 1,
+      aspect: panelAspect,
       image: item.querySelector('[data-glass-carousel-image]') ||
         item.querySelector('.bunny-bg__placeholder') || item.querySelector('img'),
       video: item.querySelector('[data-bunny-background-init] video') || item.querySelector('video')
@@ -1444,6 +1445,32 @@ async function initLiquidGlassCarousel() {
 
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin('anonymous');
+
+    function mediaSize(media) {
+      return {
+        width: media.videoWidth || media.naturalWidth || media.width || 0,
+        height: media.videoHeight || media.naturalHeight || media.height || 0
+      };
+    }
+
+    function applyCoverMapping(tex, media) {
+      const { width, height } = mediaSize(media || tex.image);
+      if (!width || !height) return;
+
+      const mediaAspect = width / height;
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+
+      if (mediaAspect > panelAspect) {
+        const ratio = panelAspect / mediaAspect;
+        tex.repeat.set(ratio, 1);
+        tex.offset.set((1 - ratio) / 2, 0);
+      } else {
+        const ratio = mediaAspect / panelAspect;
+        tex.repeat.set(1, ratio);
+        tex.offset.set(0, (1 - ratio) / 2);
+      }
+    }
 
     function fitToPanel(image) {
       const cap = Math.max(1, Math.round(panelH * Math.min(window.devicePixelRatio || 1, 2) * textureDetail));
@@ -1459,9 +1486,9 @@ async function initLiquidGlassCarousel() {
     }
 
     function measurePanel() {
-      let widest = 1;
-      for (let i = 0; i < sources.length; i++) widest = Math.max(widest, sources[i].aspect);
-      panelH = Math.min(H * panelHeight, (W * panelWidthMax) / widest);
+      const heightMax = narrow ? panelHeight * 0.87 : panelHeight;
+      const widthMax = narrow ? panelWidthMaxNarrow : panelWidthMax;
+      panelH = Math.min(H * heightMax, (W * widthMax) / panelAspect);
     }
 
     measurePanel();
@@ -1520,28 +1547,9 @@ async function initLiquidGlassCarousel() {
     let velocity = 0, prevScroll = scroll, scrollEnergy = 0;
     let lastInput = performance.now(), snapped = false, lastCenter = -1;
 
-    function updateSourceAspect(source, aspect) {
-      if (source.aspect === aspect) return;
-
-      const anchor = nearestIndex(scroll), oldHeight = panelH || 1;
-      const offset = (scroll - centerForIndex(anchor)) / oldHeight;
-      const remaining = (target - scroll) / oldHeight;
-      source.aspect = aspect;
-      measurePanel();
-      recomputeTotal();
-
-      scroll = userInteracted ? centerForIndex(anchor) + offset * panelH : centerForIndex(0);
-      target = userInteracted ? scroll + remaining * panelH : scroll;
-      prevScroll = scroll;
-    }
-
     function adoptImageTexture(source) {
       const image = source.image;
       if (disposed || !image || !image.naturalWidth || !image.naturalHeight) return;
-
-      if (!source.video || !source.video.videoWidth) {
-        updateSourceAspect(source, image.naturalWidth / image.naturalHeight);
-      }
 
       const url = image.currentSrc || image.src;
       if (!url) return;
@@ -1558,6 +1566,7 @@ async function initLiquidGlassCarousel() {
         tex.generateMipmaps = true;
         tex.anisotropy = maxAnisotropy;
         tex.colorSpace = THREE.SRGBColorSpace;
+        applyCoverMapping(tex, image);
         tex.needsUpdate = true;
 
         source.imageTex?.dispose();
@@ -1575,13 +1584,12 @@ async function initLiquidGlassCarousel() {
       const video = source.video;
       if (disposed || !video || !video.videoWidth || !video.videoHeight || source.videoTex) return;
 
-      updateSourceAspect(source, video.videoWidth / video.videoHeight);
-
       const tex = new THREE.VideoTexture(video);
       tex.minFilter = THREE.LinearFilter;
       tex.magFilter = THREE.LinearFilter;
       tex.generateMipmaps = false;
       tex.colorSpace = THREE.SRGBColorSpace;
+      applyCoverMapping(tex, video);
       source.videoTex = tex;
       source.tex = tex;
 
