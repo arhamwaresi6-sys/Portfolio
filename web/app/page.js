@@ -91,12 +91,10 @@ async function WorkSection() {
             <div key={project.id} data-glass-carousel-item="" className="glass-carousel__item">
               <Link
                 href={project.liveUrl || (project.slug ? `/projects/${project.slug}` : "/projects")}
-                target={project.liveUrl ? "_blank" : undefined}
-                rel={project.liveUrl ? "noopener noreferrer" : undefined}
                 className="glass-carousel__item-link"
                 aria-label={
                   project.liveUrl
-                    ? `Visit ${project.title} live website in a new tab`
+                    ? `Visit ${project.title} live website`
                     : `View ${project.title} project`
                 }
               >

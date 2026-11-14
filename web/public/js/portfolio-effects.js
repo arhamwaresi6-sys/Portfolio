@@ -2054,14 +2054,17 @@ async function initLiquidGlassCarousel() {
       }
 
       const hit = rectOf(e.clientX, e.clientY);
-      if (!hit) return;
+      const sourceIndex = hit?.srcIndex ?? centeredPanel?.srcIndex;
+      if (sourceIndex === undefined) return;
 
-      const link = items[hit.srcIndex]?.querySelector('a[href]');
-      if (link?.target === '_blank' || (centeredPanel && hit.srcIndex === centeredPanel.srcIndex)) {
-        followLink(hit.srcIndex, e);
+      const link = items[sourceIndex]?.querySelector('a[href]');
+      if ((link && link.origin !== window.location.origin) ||
+        (centeredPanel && sourceIndex === centeredPanel.srcIndex)) {
+        followLink(sourceIndex, e);
         return;
       }
 
+      if (!hit) return;
       userInteracted = true;
       const next = centerForIndex(nearestIndex(scroll + hit.centerX));
       velocity = (next - scroll) * 0.04;
@@ -2078,6 +2081,11 @@ async function initLiquidGlassCarousel() {
 
       if (e.metaKey || e.ctrlKey || e.shiftKey || link.target === '_blank') {
         window.open(link.href, '_blank', 'noopener');
+        return;
+      }
+
+      if (link.origin !== window.location.origin) {
+        window.location.href = link.href;
         return;
       }
 
