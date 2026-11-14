@@ -1403,7 +1403,7 @@ async function initLiquidGlassCarousel() {
   let THREE;
 
   const panelHeight = .60, panelGap = 40, wheel = 'horizontal';
-  const panelAspect = 3 / 2, panelWidthMax = .78, panelWidthMaxNarrow = .82;
+  const panelAspect = 3 / 2, panelWidthMax = .78;
   const lensWidth = 1, lensHeight = .6, lensRotation = 90;
   const lensWidthNarrow = 1, lensHeightNarrow = .7, lensRotationNarrow = 90;
   const lensColor = '#9b5cff', lensGlow = 4, lensRing = 1, lensRingRadius = .49;
@@ -1510,7 +1510,8 @@ async function initLiquidGlassCarousel() {
     let narrow = W < narrowBreakpoint, panelH = 0;
     const coarsePointer = matchMedia('(pointer: coarse)');
     const compactRender = () => narrow || coarsePointer.matches;
-    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1 : 1.5);
+    // Cap DPR a bit on touch/narrow for performance, but keep the glass lens path.
+    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1.25 : 2);
     let renderer;
 
     try {
@@ -1587,19 +1588,14 @@ async function initLiquidGlassCarousel() {
     }
 
     function measurePanel() {
-      const heightMax = narrow ? panelHeight * 0.87 : panelHeight;
-      const widthMax = narrow ? panelWidthMaxNarrow : panelWidthMax;
-      panelH = Math.min(H * heightMax, (W * widthMax) / panelAspect);
+      // Same viewport sizing as tomdekoning.work on every breakpoint.
+      panelH = Math.min(H * panelHeight, (W * panelWidthMax) / panelAspect);
     }
 
     measurePanel();
 
     function slotWidth(index) {
-      return sources[index].aspect * panelH + slotGap();
-    }
-
-    function slotGap() {
-      return compactRender() ? 12 : panelGap;
+      return sources[index].aspect * panelH + panelGap;
     }
 
     let offsets = [], totalWidth = 0;
@@ -1617,7 +1613,7 @@ async function initLiquidGlassCarousel() {
     recomputeTotal();
 
     function slotCenter(index) {
-      return offsets[index] + slotWidth(index) / 2 - slotGap() / 2;
+      return offsets[index] + slotWidth(index) / 2 - panelGap / 2;
     }
 
     function centerForIndex(index) {
@@ -1816,7 +1812,6 @@ async function initLiquidGlassCarousel() {
     function layout() {
       panelRects = [];
       centeredPanel = null;
-      const simpleLayout = compactRender();
 
       let centeredDist = Infinity;
       const half = W / 2;
@@ -1839,12 +1834,9 @@ async function initLiquidGlassCarousel() {
           return;
         }
 
-        const shrink = 1 - (simpleLayout ? .04 : .25) * scrollEnergy;
-        const focusDistance = simpleLayout ? Math.min(1, Math.abs(centerX) / (W * 0.85)) : 0;
-        const orbit = simpleLayout ? focusDistance * focusDistance * (3 - 2 * focusDistance) : 0;
-        const focusScale = simpleLayout ? 1 - orbit * 0.07 : 1;
-        const h = panelH * shrink * focusScale;
-        const w = src.aspect * panelH * shrink * focusScale;
+        const shrink = 1 - .25 * scrollEnergy;
+        const h = panelH * shrink;
+        const w = src.aspect * panelH * shrink;
 
         if (src.tex && p.boundTex !== src.tex) {
           p.mat.map = src.tex;
@@ -1854,17 +1846,15 @@ async function initLiquidGlassCarousel() {
         }
 
         p.mesh.visible = true;
-        const rotationY = simpleLayout ? -Math.sign(centerX) * orbit * 0.28 : 0;
-        p.mesh.position.set(centerX, 0, -orbit * 5);
-        p.mesh.rotation.y = rotationY;
-        p.mat.opacity = simpleLayout ? 1 - orbit * 0.16 : 1;
+        p.mesh.position.set(centerX, 0, 0);
+        p.mesh.rotation.set(0, 0, 0);
+        p.mat.opacity = 1;
         if (p.mesh.geometry !== panelGeometry) p.mesh.geometry = panelGeometry;
         p.mesh.scale.set(w, h, 1);
-        const hitWidth = w * Math.cos(rotationY);
 
         const sx = centerX + W / 2, sy = H / 2;
         panelRects.push({
-          left: sx - hitWidth / 2, right: sx + hitWidth / 2,
+          left: sx - w / 2, right: sx + w / 2,
           top: sy - h / 2, bottom: sy + h / 2,
           poolIdx, srcIndex: i, centerX
         });
@@ -2209,18 +2199,13 @@ async function initLiquidGlassCarousel() {
       lensUniforms.uTime.value = performance.now() * .001;
 
       renderer.setClearColor(0x000000, 0);
-      if (compactRender()) {
-        renderer.setRenderTarget(null);
-        renderer.clear();
-        renderer.render(scene, camera);
-      } else {
-        renderer.setRenderTarget(rt);
-        renderer.clear();
-        renderer.render(scene, camera);
-        renderer.setRenderTarget(null);
-        renderer.clear();
-        renderer.render(lensScene, lensCam);
-      }
+      // Match tomdekoning.work: liquid glass lens on every breakpoint, including mobile.
+      renderer.setRenderTarget(rt);
+      renderer.clear();
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      renderer.render(lensScene, lensCam);
 
       raf = requestAnimationFrame(tick);
     }

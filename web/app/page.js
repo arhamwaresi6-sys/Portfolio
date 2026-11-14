@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { connection } from "next/server";
 import { getPublishedProjects } from "@/lib/projects";
 import { getPublishedProfileImageUrl } from "@/lib/site-settings";
@@ -65,6 +66,7 @@ async function WorkSection() {
   });
   const projects = featuredProjects.map((project) => ({
     id: project.id,
+    slug: project.slug,
     title: project.title,
     type: project.category,
     image: project.image_urls?.[0] ?? "/images/project-placeholder.svg",
@@ -75,25 +77,41 @@ async function WorkSection() {
     <section
       id="work"
       data-glass-carousel=""
-      data-scroll-scrub-section=""
-      data-scrub-seconds-per-screen="4"
-      className="glass-carousel glass-carousel--ready"
+      data-scroll=""
+      data-scroll-speed="-0.2"
+      className="glass-carousel"
     >
       <CarouselHydrationReady />
-      <div className="glass-carousel__stage">
-        <canvas aria-hidden="true" data-glass-carousel-canvas="" className="glass-carousel__canvas" />
+      <canvas aria-hidden="true" data-glass-carousel-canvas="" className="glass-carousel__canvas" />
 
-        <div className="glass-carousel__collection">
-          <div data-glass-carousel-list="" className="glass-carousel__list">
-            {projects.map((project) => (
-              <div key={project.id} data-glass-carousel-item="" className="glass-carousel__item">
+      <div className="glass-carousel__collection">
+        <div data-glass-carousel-list="" className="glass-carousel__list">
+          {projects.map((project) => (
+            <div key={project.id} data-glass-carousel-item="" className="glass-carousel__item">
+              <Link
+                href={project.slug ? `/projects/${project.slug}` : "/projects"}
+                className="glass-carousel__item-link"
+                aria-label={`View ${project.title} project`}
+              >
                 <div
+                  data-bunny-background-init={project.video ? "" : undefined}
+                  data-player-src={project.video || undefined}
                   data-player-activated="false"
                   data-player-status="idle"
                   data-player-lazy="false"
-                  data-player-autoplay="false"
+                  data-player-autoplay={project.video ? "true" : "false"}
                   className="bunny-bg"
                 >
+                  {project.video ? (
+                    <video
+                      aria-hidden="true"
+                      crossOrigin="anonymous"
+                      muted
+                      playsInline
+                      preload="auto"
+                      className="bunny-bg__video"
+                    />
+                  ) : null}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt=""
@@ -101,34 +119,20 @@ async function WorkSection() {
                     loading="lazy"
                     className="bunny-bg__placeholder"
                   />
-                  {project.video ? (
-                    <video
-                      aria-hidden="true"
-                      crossOrigin="anonymous"
-                      data-project-title={project.title}
-                      data-project-src={project.video}
-                      data-scroll-scrub-video=""
-                      muted
-                      playsInline
-                      poster={project.image}
-                      preload="none"
-                      className="bunny-bg__video"
-                    />
-                  ) : null}
                 </div>
 
                 <div data-glass-carousel-content="" className="glass-carousel__item-content">
                   <h3 className="glass-carousel__item-p">{project.title}</h3>
                   <p className="glass-carousel__item-p is--faded">{project.type}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              </Link>
+            </div>
+          ))}
         </div>
-
-        <div aria-live="polite" data-glass-carousel-caption="" className="glass-carousel__caption" />
-        <div data-glass-carousel-counter="" className="glass-carousel__counter" />
       </div>
+
+      <div aria-live="polite" data-glass-carousel-caption="" className="glass-carousel__caption" />
+      <div data-glass-carousel-counter="" className="glass-carousel__counter" />
     </section>
   ) : (
     <section id="work" className="padding-global">
@@ -346,11 +350,9 @@ export default function Home() {
         <Suspense
           fallback={
             <section id="work" className="glass-carousel glass-carousel--loading" aria-busy="true">
-              <div className="glass-carousel__stage glass-carousel__stage--loading">
-                <p className="glass-carousel__loading-title">Selected work</p>
-                <div className="glass-carousel__loading-card" aria-hidden="true" />
-                <p role="status" className="glass-carousel__loading-status">Loading projects...</p>
-              </div>
+              <p className="glass-carousel__loading-title">Selected work</p>
+              <div className="glass-carousel__loading-card" aria-hidden="true" />
+              <p role="status" className="glass-carousel__loading-status">Loading projects...</p>
             </section>
           }
         >
