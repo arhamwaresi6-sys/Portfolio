@@ -1035,7 +1035,7 @@ export function AdminProjectManager({
                   className={`${fieldClassName} file:mr-3 file:rounded file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:text-white`}
                 />
                 <p className="mt-2 text-[11px] text-silver/60">
-                  MP4, WebM, or MOV up to 100 MB. H.264 MP4 is recommended.
+                  MP4, WebM, or MOV up to 100 MB. Use the original 1080p-or-higher H.264 MP4 for a sharp card; storage keeps the uploaded file unchanged.
                 </p>
               </div>
               {form.video_path && !removeVideo ? (

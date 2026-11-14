@@ -1194,6 +1194,7 @@ function initBunnyPlayerBackground() {
     const events = eventScope(), carousel = player.closest('[data-glass-carousel]');
     const autoplay = player.dataset.playerAutoplay === 'true';
     const lazy = player.dataset.playerLazy === 'true';
+    const isHlsSource = /\.m3u8(?:[?#]|$)/i.test(src);
 
     let attached = false, disposed = false, inView = false, managedVisible = null;
     let manualPaused = false, manuallyStarted = false, playPromise = null, failed = false, revision = 0;
@@ -1218,7 +1219,7 @@ function initBunnyPlayerBackground() {
     video.defaultMuted = video.muted;
     video.toggleAttribute('muted', video.muted);
     if (autoplay) video.loop = true;
-    video.preload = lazy || reduceMotion() ? 'none' : 'metadata';
+    video.preload = lazy || reduceMotion() ? 'none' : 'auto';
     if ('disableRemotePlayback' in video) video.disableRemotePlayback = true;
     video.load();
     syncMuted();
@@ -1260,15 +1261,25 @@ function initBunnyPlayerBackground() {
       if (attached || disposed) return;
       attached = true;
 
+      if (!isHlsSource) {
+        video.preload = 'auto';
+        video.src = src;
+        video.load();
+        return;
+      }
+
       const native = !!video.canPlayType('application/vnd.apple.mpegurl');
       const preferNative = native && 'ManagedMediaSource' in window;
 
-      if (!preferNative && window.Hls?.isSupported()) {
+      if (preferNative || !window.Hls?.isSupported()) {
+        video.src = src;
+        video.load();
+      } else {
         hls = new Hls({
           maxBufferLength: 10,
           backBufferLength: 10,
           capLevelToPlayerSize: false,
-          abrEwmaDefaultEstimate: 2_500_000 // Let short clips start above HLS.js's low default, while remaining adaptive.
+          abrEwmaDefaultEstimate: 5_000_000
         });
         player._hls = hls;
 
@@ -1290,9 +1301,6 @@ function initBunnyPlayerBackground() {
         });
 
         hls.attachMedia(video);
-      } else {
-        video.src = src;
-        video.load();
       }
     };
 
@@ -1517,8 +1525,8 @@ async function initLiquidGlassCarousel() {
     let narrow = W < narrowBreakpoint, panelH = 0;
     const coarsePointer = matchMedia('(pointer: coarse)');
     const compactRender = () => narrow || coarsePointer.matches;
-    // Cap DPR a bit on touch/narrow for performance, but keep the glass lens path.
-    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, compactRender() ? 1.5 : 2);
+    // Keep the mobile video texture sharp on high-density screens without unbounded GPU cost.
+    const renderPixelRatio = () => Math.min(window.devicePixelRatio || 1, 2);
     let renderer;
 
     try {
@@ -1549,7 +1557,6 @@ async function initLiquidGlassCarousel() {
       image: item.querySelector('[data-glass-carousel-image]') ||
         item.querySelector('.bunny-bg__placeholder') || item.querySelector('img'),
       video: item.querySelector('[data-bunny-background-init] video') || item.querySelector('video'),
-      videoRequested: false
     }));
 
     const loader = new THREE.TextureLoader();
@@ -2160,15 +2167,6 @@ async function initLiquidGlassCarousel() {
         if (source.visible !== on) {
           source.visible = on;
           player?._setBunnyVisible?.(on);
-        }
-        if (on && source.video && !source.videoRequested && !reduceMotion()) {
-          const videoUrl = source.video.dataset.projectSrc;
-          if (videoUrl) {
-            source.video.preload = 'metadata';
-            source.video.src = videoUrl;
-            source.video.load();
-            source.videoRequested = true;
-          }
         }
         if (retry && on) player?._requestBunnyPlay?.();
       });

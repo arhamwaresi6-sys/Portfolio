@@ -103,7 +103,7 @@ async function WorkSection() {
                   data-player-src={project.video || undefined}
                   data-player-activated="false"
                   data-player-status="idle"
-                  data-player-lazy="false"
+                  data-player-lazy="true"
                   data-player-autoplay={project.video ? "true" : "false"}
                   className="bunny-bg"
                 >
@@ -113,7 +113,7 @@ async function WorkSection() {
                       crossOrigin="anonymous"
                       muted
                       playsInline
-                      preload="auto"
+                      preload="none"
                       className="bunny-bg__video"
                     />
                   ) : null}
